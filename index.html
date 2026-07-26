@@ -3,228 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>贪吃蛇大作战</title>
+<title>游戏中心</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a1a;display:flex;flex-direction:column;align-items:center;min-height:100vh;font-family:sans-serif;color:#fff;outline:none}
-h1{font-size:28px;margin:20px 0 10px;background:linear-gradient(90deg,#00d2ff,#e94560);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-#info{display:flex;gap:20px;font-size:14px;color:#aaa;margin-bottom:8px}
+body{background:#0a0a1a;color:#fff;font-family:sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;outline:none}
+h1{font-size:24px;margin:14px 0 6px;background:linear-gradient(90deg,#00d2ff,#e94560);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tabs{display:flex;gap:6px;margin:6px 0}
+.tabs button{padding:5px 12px;border:2px solid #333;border-radius:14px;background:transparent;color:#888;font-size:12px;cursor:pointer}
+.tabs button.on{border-color:#e94560;color:#fff;background:rgba(233,69,96,.12)}
+#info{display:flex;gap:14px;font-size:12px;color:#aaa;margin-bottom:4px}
 #info b{color:#e94560}
-#wrap{position:relative;border:2px solid #e94560;border-radius:12px;overflow:hidden}
+#wrap{position:relative;border:2px solid #e94560;border-radius:8px;overflow:hidden}
 canvas{display:block;background:#16213e}
-#menu{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-#menu h2{color:#e94560;font-size:22px;margin-bottom:8px}
-#menu button{width:200px;padding:10px;border:2px solid #333;border-radius:10px;background:transparent;color:#fff;font-size:14px;cursor:pointer}
-#menu button:hover{border-color:#e94560;background:rgba(233,69,96,.1)}
-#menu .d{font-size:11px;color:#666;margin-top:4px}
-#pad{display:grid;grid-template-areas:". u ." "l . r" ". d .";gap:6px;margin:12px 0}
-#pad button{width:56px;height:56px;font-size:22px;border:1px solid #333;border-radius:14px;background:#1a1a3e;color:#fff;cursor:pointer}
+#menu{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:5}
+#menu h2{color:#e94560;font-size:18px;margin-bottom:4px}
+#menu button{width:180px;padding:8px;border:2px solid #333;border-radius:8px;background:transparent;color:#fff;font-size:12px;cursor:pointer;text-align:left}
+#menu button:hover{border-color:#e94560}
+#menu .d{font-size:10px;color:#666;margin-top:2px}
+#pad{display:grid;grid-template-areas:". u ." "l . r" ". d .";gap:4px;margin:8px 0}
+#pad button{width:48px;height:48px;font-size:18px;border:1px solid #333;border-radius:10px;background:#1a1a3e;color:#fff;cursor:pointer}
 #pad button:active{background:#e94560}
 .u{grid-area:u}.d{grid-area:d}.l{grid-area:l}.r{grid-area:r}
-#help{color:#555;font-size:12px;margin-bottom:20px}
-#dbg{position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:13px;padding:4px 8px;font-family:monospace}
+#help{color:#555;font-size:10px;margin-bottom:12px}
+.pg{display:none;flex-direction:column;align-items:center}
+.pg.show{display:flex}
+.ctrl{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;justify-content:center}
+.ctrl button{padding:5px 12px;border:1px solid #333;border-radius:6px;background:#1a1a3e;color:#fff;font-size:11px;cursor:pointer}
+.ctrl button:hover{border-color:#e94560}
+.cinfo{font-size:12px;color:#aaa;margin:4px 0}
+.cinfo b{color:#e94560}
 </style>
 </head>
 <body>
-<h1>🐍 贪吃蛇大作战</h1>
-<div id="info">
-<div>得分: <b id="sc">0</b></div>
-<div id="lvInfo" style="display:none">关卡: <b id="lv">1</b></div>
-<div id="tmInfo" style="display:none">⏱ <b id="tm">60</b>s</div>
-<div>最高: <b id="bs">0</b></div>
+<h1>🎮 游戏中心</h1>
+<div class="tabs">
+<button class="on" onclick="sp('snake')">🐍 贪吃蛇</button>
+<button onclick="sp('gomoku')">⚫ 五子棋</button>
+<button onclick="sp('chess')">♟ 象棋</button>
 </div>
-<div id="wrap">
-<canvas id="cv" width="400" height="400"></canvas>
-<div id="menu">
-<h2>选择模式</h2>
+
+<div id="p-snake" class="pg show">
+<div id="info"><div>得分:<b id="sc">0</b></div><div id="lvI" style="display:none">关卡:<b id="lv">1</b></div><div id="tmI" style="display:none">⏱<b id="tm">60</b>s</div><div>最高:<b id="bs">0</b></div></div>
+<div id="wrap"><canvas id="cv" width="400" height="400"></canvas>
+<div id="menu"><h2>选择模式</h2>
 <button onclick="go('classic')">🐍 经典模式<div class="d">撞墙或撞自己结束</div></button>
-<button onclick="go('level')">🏆 闯关模式<div class="d">每关加速，有障碍物</div></button>
+<button onclick="go('level')">🏆 闯关模式<div class="d">每关加速有障碍物</div></button>
 <button onclick="go('ai')">🤖 AI对战<div class="d">60秒和笨AI比分数</div></button>
+</div></div>
+<div id="pad"><button class="u" onclick="sd(0,-1)">▲</button><button class="l" onclick="sd(-1,0)">◀</button><button class="r" onclick="sd(1,0)">▶</button><button class="d" onclick="sd(0,1)">▼</button></div>
+<div id="help">WASD / 点按钮 | R 返回</div>
 </div>
+
+<div id="p-gomoku" class="pg">
+<div class="cinfo">五子棋 - <b id="gmM">人机</b> - <b id="gmT">黑棋</b>走</div>
+<canvas id="gcv" width="570" height="570"></canvas>
+<div class="ctrl"><button onclick="ig('pvp')">👥 双人</button><button onclick="ig('pve')">🤖 人机</button><button onclick="ig(gmMd)">🔄 重来</button></div>
 </div>
-<div id="pad">
-<button class="u" onclick="sd(0,-1)">▲</button>
-<button class="l" onclick="sd(-1,0)">◀</button>
-<button class="r" onclick="sd(1,0)">▶</button>
-<button class="d" onclick="sd(0,1)">▼</button>
+
+<div id="p-chess" class="pg">
+<div class="cinfo">象棋 - <b id="csM">人机</b> - <b id="csT">红方</b>走</div>
+<canvas id="ccv" width="360" height="400"></canvas>
+<div class="ctrl"><button onclick="ic('pvp')">👥 双人</button><button onclick="ic('pve')">🤖 人机</button><button onclick="ic(csMd)">🔄 重来</button></div>
 </div>
-<div id="help">WASD / 方向键 / 点按钮控制 | R 返回菜单</div>
-<div id="dbg">调试: 页面加载完成</div>
+
 <script>
-var cv=document.getElementById("cv");
-var ctx=cv.getContext("2d");
-var BS=20,GS=20;
-var snake,food,dirX,dirY,score,timer,mode,level,tgt,walls,aiSnake,aiDir,aiScore,over,sec,secTimer,aiTimer;
-var best=parseInt(localStorage.getItem("snakeBest")||"0");
-document.getElementById("bs").textContent=best;
-var dbg=document.getElementById("dbg");
+function sp(p){var ps=document.querySelectorAll('.pg');for(var i=0;i<ps.length;i++)ps[i].classList.remove('show');document.getElementById('p-'+p).classList.add('show');var bs=document.querySelectorAll('.tabs button');for(var i=0;i<bs.length;i++)bs[i].classList.remove('on');if(p=='snake')bs[0].classList.add('on');else if(p=='gomoku')bs[1].classList.add('on');else bs[2].classList.add('on');if(p=='gomoku'&&!gi)ig('pve');if(p=='chess'&&!ci)ic('pve');}
 
-function dd(m){dbg.textContent="调试: "+m;}
-
-dd("脚本开始执行");
-
-function sd(nx,ny){
-  dd("sd("+nx+","+ny+") 当前方向:"+dirX+","+dirY+" over:"+over);
-  if(over){dd("游戏结束，忽略");return;}
-  if(dirX==-nx&&dirY==-ny&&(dirX!=0||dirY!=0)){dd("反向，忽略");return;}
-  dirX=nx;dirY=ny;
-  dd("方向设置成功: "+dirX+","+dirY);
-}
-
-function go(m){
-  dd("开始游戏: "+m);
-  mode=m;level=1;score=0;over=false;
-  snake=[{x:5,y:10}];dirX=0;dirY=0;walls=[];
-  tgt=5;
-  document.getElementById("sc").textContent="0";
-  document.getElementById("lvInfo").style.display=m=="level"?"block":"none";
-  document.getElementById("tmInfo").style.display=m=="ai"?"block":"none";
-  document.getElementById("menu").style.display="none";
-  if(m=="ai"){
-    sec=60;document.getElementById("tm").textContent="60";
-    aiSnake=[{x:15,y:10}];aiDir={x:0,y:0};aiScore=0;
-    if(secTimer)clearInterval(secTimer);
-    secTimer=setInterval(function(){
-      sec--;document.getElementById("tm").textContent=sec;
-      if(sec<=0){clearInterval(secTimer);clearInterval(timer);clearInterval(aiTimer);endGame();}
-    },1000);
-  }else{aiSnake=null;if(secTimer)clearInterval(secTimer);}
-  if(m=="level")makeWalls();
-  newFood();
-  if(timer)clearInterval(timer);
-  if(aiTimer)clearInterval(aiTimer);
-  var sp=m=="level"?Math.max(55,125-level*8):110;
-  timer=setInterval(step,sp);
-  if(m=="ai")aiTimer=setInterval(aiStep,220);
-  draw();
-  dd("游戏已启动，等待按键...");
-}
-
-function makeWalls(){
-  walls=[];var n=Math.min(level*2,14);
-  for(var i=0;i<n;i++){
-    var wx,wy,ok=false;
-    for(var t=0;t<50;t++){
-      wx=Math.floor(Math.random()*GS);wy=Math.floor(Math.random()*GS);
-      if(wx>=3&&wx<=7&&wy>=8&&wy<=12)continue;
-      if(wx>=13&&wx<=17&&wy>=8&&wy<=12)continue;
-      var dup=false;
-      for(var j=0;j<walls.length;j++){if(walls[j].x==wx&&walls[j].y==wy){dup=true;break;}}
-      if(!dup){ok=true;break;}
-    }
-    if(ok)walls.push({x:wx,y:wy});
-  }
-}
-
-function newFood(){
-  for(var t=0;t<100;t++){
-    food={x:Math.floor(Math.random()*GS),y:Math.floor(Math.random()*GS)};
-    var bad=false;
-    for(var i=0;i<snake.length;i++){if(snake[i].x==food.x&&snake[i].y==food.y){bad=true;break;}}
-    if(bad)continue;
-    if(aiSnake){for(var i=0;i<aiSnake.length;i++){if(aiSnake[i].x==food.x&&aiSnake[i].y==food.y){bad=true;break;}}}
-    if(bad)continue;
-    for(var i=0;i<walls.length;i++){if(walls[i].x==food.x&&walls[i].y==food.y){bad=true;break;}}
-    if(bad)continue;
-    return;
-  }
-  food={x:0,y:0};
-}
-
-function step(){
-  if(over)return;
-  if(dirX==0&&dirY==0)return;
-  var h={x:snake[0].x+dirX,y:snake[0].y+dirY};
-  if(h.x<0||h.x>=GS||h.y<0||h.y>=GS){endGame();return;}
-  for(var i=0;i<snake.length;i++){if(snake[i].x==h.x&&snake[i].y==h.y){endGame();return;}}
-  for(var i=0;i<walls.length;i++){if(walls[i].x==h.x&&walls[i].y==h.y){endGame();return;}}
-  snake.unshift(h);
-  if(h.x==food.x&&h.y==food.y){
-    score++;document.getElementById("sc").textContent=score;newFood();
-    if(mode=="level"&&score>=tgt*level){
-      level++;document.getElementById("lv").textContent=level;tgt=5+level*2;
-      makeWalls();clearInterval(timer);timer=setInterval(step,Math.max(55,125-level*8));
-    }
-  }else{snake.pop();}
-  draw();
-}
-
-function aiStep(){
-  if(!aiSnake||over)return;
-  if(Math.random()<0.45)return;
-  var h=aiSnake[0];
-  var dirs=[[0,-1],[0,1],[-1,0],[1,0]];
-  dirs.sort(function(){return Math.random()-0.5;});
-  var nx=0,ny=0,found=false;
-  for(var i=0;i<dirs.length;i++){
-    var dx=dirs[i][0],dy=dirs[i][1];
-    if(aiDir.x==-dx&&aiDir.y==-dy)continue;
-    var tx=h.x+dx,ty=h.y+dy;
-    if(tx<0||tx>=GS||ty<0||ty>=GS)continue;
-    var bad=false;
-    for(var j=0;j<aiSnake.length;j++){if(aiSnake[j].x==tx&&aiSnake[j].y==ty){bad=true;break;}}
-    if(bad)continue;
-    for(var j=0;j<snake.length;j++){if(snake[j].x==tx&&snake[j].y==ty){bad=true;break;}}
-    if(bad)continue;
-    for(var j=0;j<walls.length;j++){if(walls[j].x==tx&&walls[j].y==ty){bad=true;break;}}
-    if(bad)continue;
-    nx=dx;ny=dy;found=true;break;
-  }
-  if(!found)return;
-  aiDir={x:nx,y:ny};
-  var nh={x:h.x+nx,y:h.y+ny};
-  aiSnake.unshift(nh);
-  if(nh.x==food.x&&nh.y==food.y){aiScore++;newFood();}
-  else{aiSnake.pop();}
-}
-
-function endGame(){
-  over=true;clearInterval(timer);
-  if(secTimer)clearInterval(secTimer);
-  if(aiTimer)clearInterval(aiTimer);
-  if(score>best){best=score;localStorage.setItem("snakeBest",best);document.getElementById("bs").textContent=best;}
-  var msg="游戏结束!";
-  if(mode=="ai")msg=score>aiScore?"🎉 你赢了! "+score+" vs "+aiScore:score==aiScore?"🤝 平局! "+score+" vs "+aiScore:"🤖 AI赢了! "+aiScore+" vs "+score;
-  ctx.fillStyle="rgba(0,0,0,.85)";ctx.fillRect(0,0,cv.width,cv.height);
-  ctx.fillStyle="#e94560";ctx.font="26px sans-serif";ctx.textAlign="center";
-  ctx.fillText(msg,cv.width/2,cv.height/2-20);
-  ctx.fillStyle="#fff";ctx.font="18px sans-serif";
-  ctx.fillText("得分: "+score,cv.width/2,cv.height/2+15);
-  ctx.fillStyle="#aaa";ctx.font="14px sans-serif";
-  ctx.fillText("点击画布返回菜单",cv.width/2,cv.height/2+50);
-  cv.onclick=function(){cv.onclick=null;showMenu();};
-}
-
-function showMenu(){
-  clearInterval(timer);if(secTimer)clearInterval(secTimer);if(aiTimer)clearInterval(aiTimer);
-  document.getElementById("menu").style.display="flex";
-  ctx.fillStyle="#16213e";ctx.fillRect(0,0,cv.width,cv.height);
-}
-
-函数 draw(){
-  ctx.fillStyle="#16213e";ctx.fillRect(0,0,cv.width,cv.height);
-对于(变量 i=0;i<GS;i++(变量 j=0;j<GS;j++)如果((i+j)%2==0){上下文.fillStyle="rgba(255,255,255,.02)";上下文.fillRect(i*BS,j*BS,BS,BS);}
-  ( i=0;i<walls.长度;i++){上下文.填充样式="#444";上下文.填充矩形(walls[i].x*BS,walls[i].y*BS,BS,BS);}
-对于i=0;i<蛇.长度;i++{上下文.填充样式=i==0?“#00d2ff”:“#0f3460”;上下文.fillRect(蛇[i].x*BS+1,蛇[
-  (aiSnake){for(var i=0;i<aiSnake.length;i++){ctx.fillStyle=i==0?"#ffd700":"#b8860b";ctx.fillRect(aiSnake[i].x*BS+1,aiSnake[i].y*BS+1,BS-2,BS-2);}}
-  ctx.fillStyle="#e94560";ctx.beginPath();ctx.arc(food.x*BS+BS/2,food.y*BS+BS/2,BS/2-2,0,Math.PI*2);ctx.fill();
-  如果(模式=="ai"){上下文.填充颜色="#00d2ff";上下文.字体="13px 无衬线体";上下文.文本对齐="左对齐";上下文.绘制文本("你:"+分数,10,20);上下文.填充颜色="#ffd700";上下文.绘制文本("AI:"+人工智能分数,10,38);}
-}
-
-文档.onkeydown=函数(e){
-  var k=e.key||"";
-  var kc=e.keyCode||0;
-  dd("按键: ["+k+"] code="+kc);
-  k=k.toLowerCase();
-  如果(k=="w"||k=="arrowup"||kc==38){e.preventDefault();sd(0,-1);}
-  否则 如果(k=="s"||k=="向下箭头"||kc==40){e.preventDefault();sd(0,1);}
-  否则 如果(k=="a"||k=="arrowleft"||kc==37){e.preventDefault();sd(-1,0);}
-  否则 如果(k=="d"||k=="arrowright"||kc==39){e.preventDefault();sd(1,0);}
-  else if(k=="r"){showMenu();}
-};
-
-dd("所有代码执行完毕，等待操作");
-showMenu();
+var cv=document.getElementById('cv'),cx=cv.getContext('2d'),BS=20,GS=20;
+var sn,fd,dx,dy,sc,tm,md,lv,tg,ws,as,ad,as2,ov,se,st,at;
+var bt=parseInt(localStorage.getItem('snakeBest')||'0');document.getElementById('bs').textContent=bt;
+function sd(nx,ny){if(ov)return;if(dx==-nx&&dy==-ny&&(dx||dy))return;dx=nx;dy=ny;}
+function go(m){md=m;lv=1;sc=0;ov=false;sn=[{x:5,y:10}];dx=0;dy=0;ws=[];tg=5;document.getElementById('sc').textContent='0';document.getElementById('lvI').style.display=m=='level'?'block':'none';document.getElementById('tmI').style.display=m=='ai'?'block':'none';document.getElementById('menu').style.display='none';if(m=='ai'){se=60;document.getElementById('tm').textContent='60';as=[{x:15,y:10}];ad={x:0,y:0};as2=0;if(st)clearInterval(st);st=setInterval(function(){se--;document.getElementById('tm').textContent=se;if(se<=0){clearInterval(st);clearInterval(tm);clearInterval(at);eg();}},1000);}else{as=null;if(st)clearInterval(st);}if(m=='level')mw();nf();if(tm)clearInterval(tm);if(at)clearInterval(at);var sp2=m=='level'?Math.max(55,125-lv*8):110;tm=setInterval(stp,sp2);if(m=='ai')at=setInterval(ast,220);dr();}
+function mw(){ws=[];var n=Math.min(lv*2,14);for(var i=0;i<n;i++){var wx,wy,ok=false;for(var t=0;t<50;t++){wx=Math.floor(Math.random()*GS);wy=Math.floor(Math.random()*GS);if(wx>=3&&wx<=7&&wy>=8&&wy<=12)continue;if(wx>=13&&wx<=17&&wy>=8&&wy<=12)continue;var dp=false;for(var j=0;j<ws.length;j++)if(ws[j].x==wx&&ws[j].y==wy){dp=true;break;}if(!dp){ok=true;break;}}if(ok)ws.push({x:wx,y:wy});}}
+function nf(){for(var t=0;t<100;t++){fd={x:Math.floor(Math.random()*GS),y:Math.floor(Math.random()*GS)};var bd=false;for(var i=0;i<sn.length;i++)if(sn[i].x==fd.x&&sn[i].y==fd.y){bd=true;break;}if(bd)continue;if(as)for(var i=0;i<as.length;i++)if(as[i].x==fd.x&&as[i].y==fd.y){bd=true;break;}if(bd)continue;for(var i=0;i<ws.length;i++)if(ws[i].x==fd.x&&ws[i].y==fd.y){bd=true;break;}if(bd)continue;return;}fd={x:0,y:0};}
+function stp(){if(ov||(dx==0&&dy==0))return;var h={x:sn[0].x+dx,y:sn[0].y+dy};if(h.x<0||h.x>=GS||h.y<0||h.y>=GS){eg();return;}for(var i=0;i<sn.length;i++)if(sn[i].x==h.x&&sn[i].y==h.y){eg();return;}for(var i=0;i<ws.length;i++)if(ws[i].x==h.x&&ws[i].y==h.y){eg();return;}sn.unshift(h);if(h.x==fd.x&&h.y==fd.y){sc++;document.getElementById('sc').textContent=sc;nf();if(md=='level'&&sc>=tg*lv){lv++;document.getElementById('lv').textContent=lv;tg=5+lv*2;mw();clearInterval(tm);tm=setInterval(stp,Math.max(55,125-lv*8));}}else sn.pop();dr();}
+function ast(){if(!as||ov)return;if(Math.random()<0.45)return;var h=as[0],ds=[[0,-1],[0,1],[-1,0],[1,0]];ds.sort(function(){return Math.random()-0.5;});var nx=0,ny=0,fd2=false;for(var i=0;i<ds.length;i++){var d1=ds[i][0],d2=ds[i][1];if(ad.x==-d1&&ad.y==-d2)continue;var tx=h.x+d1,ty=h.y+d2;if(tx<0||tx>=GS||ty<0||ty>=GS)continue;var bd=false;for(var j=0;j<as.length;j++)if(as[j].x==tx&&as[j].y==ty){bd=true;break;}if(bd)continue;for(var j=0;j<sn.length;j++)if(sn[j].x==tx&&sn[j].y==ty){bd=true;break;}if(bd)continue;for(var j=0;j<ws.length;j++)if(ws[j].x==tx&&ws[j].y==ty){bd=true;break;}if(bd)continue;nx=d1;ny=d2;fd2=true;break;}if(!fd2)return;ad={x:nx,y:ny};var nh={x:h.x+nx,y:h.y+ny};as.unshift(nh);if(nh.x==fd.x&&nh.y==fd.y){as2++;nf();}else as.pop();}
+function eg(){ov=true;clearInterval(tm);if(st)clearInterval(st);if(at)clearInterval(at);if(sc>bt){bt=sc;localStorage.setItem('snakeBest',bt);document.getElementById('bs').textContent=bt;}var msg='游戏结束!';if(md=='ai')msg=sc>as2?'🎉 你赢了! '+sc+' vs '+as2:sc==as2?'🤝 平局! '+sc+' vs '+as2:'🤖 AI赢了! '+as2+' vs '+sc;cx.fillStyle='rgba(0,0,0,.85)';cx.fillRect(0,0,cv.width,cv.height);cx.fillStyle='#e94560';cx.font='22px sans-serif';cx.textAlign='center';cx.fillText(msg,cv.width/2,cv.height/2-16);cx.fillStyle='#fff';cx.font='15px sans-serif';cx.fillText('得分: '+sc,cv.width/2,cv.height/2+10);cx.fillStyle='#aaa';cx.font='12px sans-serif';cx.fillText('点击画布返回',cv.width/2,cv.height/2+36);cv.onclick=function(){cv.onclick=null;sm();};}
+function sm(){clearInterval(tm);if(st)clearInterval(st);if(at)clearInterval(at);document.getElementById('menu').style.display='flex';cx.fillStyle='#16213e';cx.fillRect(0,0,cv.width,cv.height);}
+function dr(){cx.fillStyle='#16213e';cx.fillRect(0,0,cv.width,cv.height);for(var i=0;i<ws.length;i++){cx.fillStyle='#444';cx.fillRect(ws[i].x*BS,ws[i].y*BS,BS,BS);}for(var i=0;i<sn.length;i++){cx.fillStyle=i==0?'#00d2ff':'#0f3460';cx.fillRect(sn[i].x*BS+1,sn[i].y*BS+1,BS-2,BS-2);}if(as)for(var i=0;i<as.length;i++){cx.fillStyle=i==0?'#ffd700':'#b8860b';cx.fillRect(as[i].x*BS+1,as[i].y*BS+1,BS-2,BS-2);}cx.fillStyle='#e94560';cx.beginPath();cx.arc(fd.x*BS+BS/2,fd.y*BS+BS/2,BS/2-2,0,Math.PI*2);cx.fill();if(md=='ai'){cx.fillStyle='#00d2ff';cx.font='11px sans-serif';cx.textAlign='left';cx.fillText('你:'+sc,10,16);cx.fillStyle='#ffd700';cx.fillText('AI:'+as2,10,30);}}
+document.onkeydown=function(e){var k=(e.key||'').toLowerCase(),kc=e.keyCode||0;if(k=='w'||kc==87){e.preventDefault();sd(0,-1);}else if(k=='s'||kc==83){e.preventDefault();sd(0,1);}else if(k=='a'||kc==65){e.preventDefault();sd(-1,0);}else if(k=='d'||kc==68){e.preventDefault();sd(1,0);}else if(k=='r')sm();};
+sm();
 </script>
-</body>
-</html>
+// ===== 五子棋 =====
+var gi=false,gmMd='pve',gb,gt,go2,gp,gl;
+var gc=document.getElementById('gcv'),gx=gc.getContext('2d'),gS=15,gP=38,gO=15;
+function ig(m){gmMd=m;gp=(m=='pve');go2=false;gt=1;gl=null;gi=true;document.getElementById('gmM').textContent=gp?'人机':'双人';document.getElementById('gmT').textContent='黑棋';gb=[];for(var i=0;i<15;i++){gb[i]=[];for(var j=0;j<15;j++)gb[i][j]=0;}dg();}
+function dg(){gx.fillStyle='#dcb35c';gx.fillRect(0,0,gc.width,gc.height);gx.strokeStyle='#333';gx.lineWidth=1;for(var i=0;i<15;i++){gx.beginPath();gx.moveTo(gO+i*gP,gO);gx.lineTo(gO+i*gP,gO+14*gP);gx.stroke();gx.beginPath();gx.moveTo(gO,gO+i*gP);gx.lineTo(gO+14*gP,gO+i*gP);gx.stroke();}for(var i=0;i<15;i++)for(var j=0;j<15;j++){if(gb[i][j]==1){gx.fillStyle='#000';gx.beginPath();gx.arc(gO+j*gP,gO+i*gP,gP/2-3,0,Math.PI*2);gx.fill();}else if(gb[i][j]==2){gx.fillStyle='#fff';gx.beginPath();gx.arc(gO+j*gP,gO+i*gP,gP/2-3,0,Math.PI*2);gx.fill();gx.strokeStyle='#000';gx.lineWidth=1;gx.stroke();}}if(gl){gx.strokeStyle='#e94560';gx.lineWidth=2;gx.beginPath();gx.arc(gO+gl[1]*gP,gO+gl[0]*gP,gP/2,0,Math.PI*2);gx.stroke();}}
+gc.onclick=function(e){var r=gc.getBoundingClientRect();var mx=e.clientX-r.left,my=e.clientY-r.top;var c=Math.round((mx-gO)/gP),rw=Math.round((my-gO)/gP);if(rw<0||rw>=15||c<0||c>=15)return;gk(rw,c);};
+function gk(r,c){if(go2||gb[r][c]!=0)return;gb[r][c]=gt;gl=[r,c];if(cw5(r,c,gt)){go2=true;dg();document.getElementById('gmT').textContent=(gt==1?'黑棋':'白棋')+'获胜!';return;}var fl=true;for(var i=0;i<15;i++)for(var j=0;j<15;j++)if(gb[i][j]==0)fl=false;if(fl){go2=true;dg();document.getElementById('gmT').textContent='平局!';return;}gt=gt==1?2:1;document.getElementById('gmT').textContent=gt==1?'黑棋':'白棋';dg();if(gp&&gt==2&&!go2)setTimeout(gai,300);}
+function gai(){if(go2)return;var bs=-1,br=-1,bc=-1;for(var i=0;i<15;i++)for(var j=0;j<15;j++){if(gb[i][j]!=0)continue;var s=ep(i,j,2)+ep(i,j,1)*0.9;if(s>bs){bs=s;br=i;bc=j;}}if(br>=0)gk(br,bc);}
+function ep(r,c,p){var s=0,ds=[[1,0],[0,1],[1,1],[1,-1]];for(var d=0;d<4;d++){var cn=1,op=0;for(var k=1;k<5;k++){var nr=r+ds[d][0]*k,nc=c+ds[d][1]*k;if(nr<0||nr>=15||nc<0||nc>=15)break;if(gb[nr][nc]==p)cn++;else{if(gb[nr][nc]==0)op++;break;}}for(var k=1;k<5;k++){var nr=r-ds[d][0]*k,nc=c-ds[d][1]*k;if(nr<0||nr>=15||nc<0||nc>=15)break;if(gb[nr][nc]==p)cn++;else{if(gb[nr][nc]==0)op++;break;}}if(cn>=5)s+=100000;else if(cn==4&&op==2)s+=10000;else if(cn==4&&op==1)s+=1000;else if(cn==3&&op==2)s+=1000;else if(cn==3&&op==1)s+=100;else if(cn==2&&op==2)s+=100;else if(cn==2&&op==1)s+=10;}return s;}
+function cw5(r,c,p){var ds=[[1,0],[0,1],[1,1],[1,-1]];for(var d=0;d<4;d++){var cn=1;for(var k=1;k<5;k++){var nr=r+ds[d][0]*k,nc=c+ds[d][1]*k;if(nr<0||nr>=15||nc<0||nc>=15||gb[nr][nc]!=p)break;cn++;}for(var k=1;k<5;k++){var nr=r-ds[d][0]*k,nc=c-ds[d][1]*k;if(nr<0||nr>=15||nc<0||nc>=15||gb[nr][nc]!=p)break;cn++;}if(cn>=5)return true;}return false;}
+
+// ===== 象棋 =====
+var ci=false,csMd='pve',cb,ct,co,cp2,cs2,cl;
+var cc=document.getElementById('ccv'),cx2=cc.getContext('2d'),cW=40,cH=40,cX=20,cY=30;
+var CP={r:{K:'帅',A:'仕',B:'相',N:'马',R:'车',C:'炮',P:'兵'},b:{K:'将',A:'士',B:'象',N:'马',R:'车',C:'炮',P:'卒'}};
+function ic(m){csMd=m;cp2=(m=='pve');co=false;ct='r';cs2=null;cl=null;ci=true;document.getElementById('csM').textContent=cp2?'人机':'双人';document.getElementById('csT').textContent='红方';cb=[['bR','bN','bB','bA','bK','bA','bB','bN','bR'],[null,null,null,null,null,null,null,null,null],[null,'bC',null,null,null,null,null,'bC',null],['bP',null,'bP',null,'bP',null,'bP',null,'bP'],[null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null],['rP',null,'rP',null,'rP',null,'rP',null,'rP'],[null,'rC',null,null,null,null,null,'rC',null],[null,null,null,null,null,null,null,null,null],['rR','rN','rB','rA','rK','rA','rB','rN','rR']];dc();}
+function dc(){cx2.fillStyle='#f0d9b5';cx2.fillRect(0,0,cc.width,cc.height);cx2.strokeStyle='#333';cx2.lineWidth=1;for(var r=0;r<10;r++){cx2.beginPath();cx2.moveTo(cX,cY+r*cH);cx2.lineTo(cX+8*cW,cY+r*cH);cx2.stroke();}for(var c=0;c<9;c++){cx2.beginPath();cx2.moveTo(cX+c*cW,cY);cx2.lineTo(cX+c*cW,cY+4*cH);cx2.stroke();cx2.beginPath();cx2.moveTo(cX+c*cW,cY+5*cH);cx2.lineTo(cX+c*cW,cY+9*cH);cx2.stroke();}cx2.beginPath();cx2.moveTo(cX+3*cW,cY);cx2.lineTo(cX+5*cW,cY+2*cH);cx2.stroke();cx2.beginPath();cx2.moveTo(cX+5*cW,cY);cx2.lineTo(cX+3*cW,cY+2*cH);cx2.stroke();cx2.beginPath();cx2.moveTo(cX+3*cW,cY+7*cH);cx2.lineTo(cX+5*cW,cY+9*cH);cx2.stroke();cx2.beginPath();cx2.moveTo(cX+5*cW,cY+7*cH);cx2.lineTo(cX+3*cW,cY+9*cH);cx2.stroke();cx2.fillStyle='#333';cx2.font='12px sans-serif';cx2.textAlign='center';cx2.fillText('楚 河',cX+2*cW,cY+4.5*cH);cx2.fillText('汉 界',cX+6*cW,cY+4.5*cH);for(var r=0;r<10;r++)for(var c=0;c<9;c++){var p=cb[r][c];if(!p)continue;var sd2=p[0],tp=p[1];var px=cX+c*cW+cW/2,py=cY+r*cH+cH/2;cx2.beginPath();cx2.arc(px,py,16,0,Math.PI*2);cx2.fillStyle=sd2=='r'?'#ffe0b2':'#b0bec5';cx2.fill();cx2.strokeStyle=sd2=='r'?'#c62828':'#1a1a1a';cx2.lineWidth=2;cx2.stroke();cx2.fillStyle=sd2=='r'?'#c62828':'#1a1a1a';cx2.font='bold 16px sans-serif';cx2.textAlign='center';cx2.textBaseline='middle';cx2.fillText(CP[sd2][tp],px,py);}if(cs2){cx2.strokeStyle='#00d2ff';cx2.lineWidth=2;cx2.strokeRect(cX+cs2[1]*cW+2,cY+cs2[0]*cH+2,cW-4,cH-4);}if(cl){cx2.strokeStyle='#e94560';cx2.lineWidth=2;cx2.strokeRect(cX+cl[1]*cW+2,cY+cl[0]*cH+2,cW-4,cH-4);}}
+cc.onclick=function(e){var r=cc.getBoundingClientRect();var mx=e.clientX-r.left,my=e.clientY-r.top;var c=Math.floor((mx-cX)/cW),rw=Math.floor((my-cY)/cH);if(rw<0||rw>9||c<0||c>8)return;ck(rw,c);};
+function ck(r,c){if(co)return;var p=cb[r][c];if(cs2){var sr=cs2[0],sc3=cs2[1],sp=cb[sr][sc3];if(p&&p[0]==ct){cs2=[r,c];dc();return;}if(cm(sr,sc3,r,c,sp)){cb[r][c]=sp;cb[sr][sc3]=null;cl=[r,c];cs2=null;if(sp[1]=='K'){co=true;dc();document.getElementById('csT').textContent=(ct=='r'?'红方':'黑方')+'获胜!';return;}ct=ct=='r'?'b':'r';document.getElementById('csT').textContent=ct=='r'?'红方':'黑方';dc();if(cp2&&ct=='b'&&!co)setTimeout(cai,400);}else{cs2=null;dc();}}else{if(p&&p[0]==ct){cs2=[r,c];dc();}}}
+function cm(fr,fc,tr,tc,p){if(tr<0||tr>9||tc<0||tc>8)return false;var tp=cb[tr][tc];if(tp&&tp[0]==p[0])return false;var sd2=p[0],tp2=p[1],dr=tr-fr,dc2=tc-fc,ar=Math.abs(dr),ac=Math.abs(dc2);if(tp2=='K'){if(ar+ac!=1)return false;if(sd2=='r'&&tr<7)return false;if(sd2=='b'&&tr>2)return false;return true;}if(tp2=='A'){if(ar!=1||ac!=1)return false;if(sd2=='r'&&tr<7)return false;if(sd2=='b'&&tr>2)return false;if(tc<3||tc>5)return false;return true;}if(tp2=='B'){if(ar!=2||ac!=2)return false;if(sd2=='r'&&tr<5)return false;if(sd2=='b'&&tr>4)return false;var mr=(fr+tr)/2,mc=(fc+tc)/2;if(cb[mr][mc])return false;return true;}if(tp2=='N'){if(!((ar==1&&ac==2)||(ar==2&&ac==1)))return false;if(ar==2){var lr=fr+(dr>0?1:-1);if(cb[lr][fc])return false;}else{var lc=fc+(dc2>0?1:-1);if(cb[fr][lc])return false;}return true;}if(tp2=='R'){if(dr!=0&&dc2!=0)return false;if(dr==0){var mn=Math.min(fc,tc),mx=Math.max(fc,tc);for(var i=mn+1;i<mx;i++)if(cb[fr][i])return false;}else{var mn=Math.min(fr,tr),mx=Math.max(fr,tr);for(var i=mn+1;i<mx;i++)if(cb[i][fc])return false;}return true;}if(tp2=='C'){if(dr!=0&&dc2!=0)return false;var cn=0;if(dr==0){var mn=Math.min(fc,tc),mx=Math.max(fc,tc);for(var i=mn+1;i<mx;i++)if(cb[fr][i])cn++;}else{var mn=Math.min(fr,tr),mx=Math.max(fr,tr);for(var i=mn+1;i<mx;i++)if(cb[i][fc])cn++;}if(tp)return cn==1;if(!tp)return cn==0;return false;}if(tp2=='P'){if(sd2=='r'){if(dr<0)return false;if(fr>4)return dr==1&&dc2==0;return ar+ac==1&&ar<=1&&ac<=1;}else{if(dr>0)return false;if(fr<5)return dr==-1&&dc2==0;return ar+ac==1&&ar<=1&&ac<=1;}}return false;}
+function cai(){if(co)return;var bv=-99999,bm=null;for(var r=0;r<10;r++)for(var c=0;c<9;c++){var p=cb[r][c];if(!p||p[0]!='b')continue;for(var tr=0;tr<10;tr++)for(var tc=0;tc<9;tc++){if(cm(r,c,tr,tc,p)){var v=0,tp=cb[tr][tc];if(tp){var vs={K:10000,R:900,C:450,N:400,B:200,A:200,P:100};v=vs[tp[1]]||0;}v+=Math.random()*50;if(v>bv){bv=v;bm=[r,c,tr,tc];}}}}if(bm)ck(bm[0],bm[1]);if(cs2)ck(bm[2],bm[3]);}
