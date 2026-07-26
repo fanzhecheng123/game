@@ -1,1 +1,230 @@
-<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>贪吃蛇大作战</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a1a;display:flex;flex-direction:column;align-items:center;min-height:100vh;font-family:'Segoe UI',sans-serif;color:#fff;touch-action:none;overflow-x:hidden}.header{text-align:center;padding:20px 0 10px}.header h1{font-size:28px;background:linear-gradient(90deg,#00d2ff,#e94560);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.tabs{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;justify-content:center}.tabs button{padding:8px 16px;border:2px solid #333;border-radius:20px;background:transparent;color:#aaa;font-size:14px;cursor:pointer;transition:all .3s}.tabs button.active{border-color:#e94560;color:#fff;background:rgba(233,69,96,.15)}.tabs button:hover{border-color:#e94560;color:#fff}.game-area{position:relative}.canvas-wrap{border:2px solid #e94560;border-radius:12px;overflow:hidden;background:#16213e;box-shadow:0 0 30px rgba(233,69,96,.2)}.info-bar{display:flex;justify-content:space-between;padding:8px 4px;font-size:14px;color:#aaa}.info-bar span{color:#e94560;font-weight:bold}.controls{display:grid;grid-template-areas:". up ." "left . right" ". down .";gap:6px;margin:12px 0}.controls button{width:56px;height:56px;font-size:22px;border:none;border-radius:14px;background:#1a1a3e;color:#fff;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;border:1px solid #333}.controls button:active{background:#e94560;transform:scale(.92)}.up{grid-area:up}.down{grid-area:down}.left{grid-area:left}.right{grid-area:right}.overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;z-index:10}.overlay h2{font-size:24px;margin-bottom:10px;color:#e94560}.overlay p{color:#aaa;margin-bottom:15px;font-size:14px}.overlay button{padding:10px 30px;border:none;border-radius:20px;background:#e94560;color:#fff;font-size:16px;cursor:pointer}.overlay button:hover{background:#ff6b81}.mode-select{display:flex;flex-direction:column;gap:10px;align-items:center}.mode-select button{width:200px;padding:12px;border:2px solid #333;border-radius:12px;background:transparent;color:#fff;font-size:15px;cursor:pointer;transition:all .3s}.mode-select button:hover{border-color:#e94560;background:rgba(233,69,96,.1)}.mode-select button .desc{font-size:11px;color:#666;margin-top:4px}.highscore{margin:10px 0;font-size:13px;color:#888}.highscore b{color:#ffd700}.api-section{margin:20px;padding:16px;border:1px solid #333;border-radius:12px;max-width:420px;width:90%}.api-section h3{font-size:16px;margin-bottom:8px;color:#00d2ff}.api-section input{width:100%;padding:8px;border:1px solid #333;border-radius:8px;background:#1a1a3e;color:#fff;font-size:13px;margin-bottom:8px}.api-section button{padding:8px 20px;border:none;border-radius:8px;background:#00d2ff;color:#000;font-weight:bold;cursor:pointer}.api-section .status{margin-top:8px;font-size:12px;color:#888}p.help{color:#555;font-size:12px;margin:10px 0 20px;text-align:center}</style></head><body><div class="header"><h1>🐍 贪吃蛇大作战</h1></div><div class="tabs"><button class="active" onclick="switchTab('game')">🎮 游戏</button><button onclick="switchTab('api')">🔌 API</button></div><div id="tab-game"><div class="info-bar"><div>得分: <span id="score">0</span></div><div>关卡: <span id="level">1</span></div><div>最高分: <span id="best">0</span></div></div><div class="game-area"><div class="canvas-wrap"><canvas id="game" width="400" height="400"></canvas><div class="overlay" id="overlay"><div class="mode-select"><h2>选择模式</h2><button onclick="startGame('classic')">🐍 经典模式<div class="desc">吃食物得分，撞墙或自己结束</div></button><button onclick="startGame('level')">🏆 闯关模式<div class="desc">每关速度加快，吃够数量过关</div></button><button onclick="startGame('ai')">🤖 AI 对战<div class="desc">和机器人比谁吃得多</div></button></div></div></div></div><div class="controls"><button class="up" onclick="setDir(0,-1)">▲</button><button class="left" onclick="setDir(-1,0)">◀</button><button class="right" onclick="setDir(1,0)">▶</button><button class="down" onclick="setDir(0,1)">▼</button></div><p class="help">WASD / 方向键 / 点击按钮控制 | R 重新开始</p></div><div id="tab-api" style="display:none"><div class="api-section"><h3>🔌 API 接入</h3><p style="color:#888;font-size:13px;margin-bottom:10px">配置后端 API 地址，游戏数据将自动同步</p><input id="apiUrl" placeholder="输入 API 地址，如 https://api.example.com/score"><button onclick="testApi()">测试连接</button><div class="status" id="apiStatus">未配置</div></div></div><script>const c=document.getElementById("game"),x=c.getContext("2d"),B=20,S=c.width/B;let sk,fd,dx,dy,sc,gl,mode,level,levelTarget,aiSnake,aiDx,aiDy,aiSc,gameOver,paused;let best=parseInt(localStorage.getItem("snakeBest")||"0");document.getElementById("best").textContent=best;function switchTab(t){document.getElementById("tab-game").style.display=t==="game"?"block":"none";document.getElementById("tab-api").style.display=t==="api"?"block":"none";document.querySelectorAll(".tabs button").forEach((b,i)=>b.classList.toggle("active",i===(t==="game"?0:1)))}function setDir(ndx,ndy){if(dx===-ndx&&dy===-ndy)return;dx=ndx;dy=ndy}function startGame(m){mode=m;level=1;sc=0;sk=[{x:5,y:10}];dx=0;dy=0;gameOver=false;paused=false;levelTarget=5;if(m==="ai"){aiSnake=[{x:15,y:10}];aiDx=0;aiDy=0;aiSc=0}else{aiSnake=null}pf();document.getElementById("overlay").style.display="none";document.getElementById("score").textContent="0";document.getElementById("level").textContent="1";if(gl)clearInterval(gl);let spd=m==="level"?Math.max(50,130-level*10):110;gl=setInterval(up,spd);dr()}function pf(){fd={x:Math.floor(Math.random()*S),y:Math.floor(Math.random()*S)};if(sk.some(s=>s.x===fd.x&&s.y===fd.y))pf()}function up(){if(gameOver||paused||dx===0&&dy===0)return;const h={x:sk[0].x+dx,y:sk[0].y+dy};if(mode!=="classic"&&(h.x<0||h.x>=S||h.y<0||h.y>=S)){h.x=(h.x+S)%S;h.y=(h.y+S)%S}if(mode==="classic"&&(h.x<0||h.x>=S||h.y<0||h.y>=S)){endGame();return}if(sk.some(s=>s.x===h.x&&s.y===h.y)){endGame();return}sk.unshift(h);if(h.x===fd.x&&h.y===fd.y){sc++;document.getElementById("score").textContent=sc;pf();if(mode==="level"&&sc>=levelTarget*level){level++;document.getElementById("level").textContent=level;clearInterval(gl);gl=setInterval(up,Math.max(50,130-level*10))}}else sk.pop();if(mode==="ai")aiMove();dr()}function aiMove(){if(!aiSnake)return;let head=aiSnake[0];let tx=fd.x,ty=fd.y;let bestD=Infinity,bdx=0,bdy=0;[[0,-1],[0,1],[-1,0],[1,0]].forEach(([ndx,ndy])=>{if(aiDx===-ndx&&aiDy===-ndy)return;let nx=head.x+ndx,ny=head.y+ndy;if(nx<0||nx>=S||ny<0||ny>=S)return;if(aiSnake.some(s=>s.x===nx&&s.y===ny))return;if(sk.some(s=>s.x===nx&&s.y===ny))return;let d=Math.abs(nx-tx)+Math.abs(ny-ty);if(d<bestD){bestD=d;bdx=ndx;bdy=ndy}});if(bdx===0&&bdy===0){[[0,-1],[0,1],[-1,0],[1,0]].forEach(([ndx,ndy])=>{if(aiDx===-ndx&&aiDy===-ndy)return;let nx=head.x+ndx,ny=head.y+ndy;if(nx<0||nx>=S||ny<0||ny>=S)return;if(aiSnake.some(s=>s.x===nx&&s.y===ny))return;if(sk.some(s=>s.x===nx&&s.y===ny))return;bdx=ndx;bdy=ndy})}aiDx=bdx;aiDy=bdy;let nh={x:head.x+aiDx,y:head.y+aiDy};if(nh.x<0||nh.x>=S||nh.y<0||nh.y>=S||aiSnake.some(s=>s.x===nh.x&&s.y===nh.y)||sk.some(s=>s.x===nh.x&&s.y===nh.y))return;aiSnake.unshift(nh);if(nh.x===fd.x&&nh.y===fd.y){aiSc++;pf()}else aiSnake.pop()}function endGame(){gameOver=true;clearInterval(gl);if(sc>best){best=sc;localStorage.setItem("snakeBest",best);document.getElementById("best").textContent=best}let msg="游戏结束!";if(mode==="ai")msg=sc>aiSc?"🎉 你赢了! "+sc+" vs "+aiSc:"🤖 AI 赢了! "+aiSc+" vs "+sc;x.fillStyle="rgba(0,0,0,.8)";x.fillRect(0,0,c.width,c.height);x.fillStyle="#e94560";x.font="26px sans-serif";x.textAlign="center";x.fillText(msg,c.width/2,c.height/2-20);x.font="18px sans-serif";x.fillStyle="#fff";x.fillText("得分: "+sc,c.width/2,c.height/2+15);x.font="14px sans-serif";x.fillStyle="#aaa";x.fillText("点击任意位置重新开始",c.width/2,c.height/2+50);c.onclick=function(){c.onclick=null;showMenu()}}function showMenu(){document.getElementById("overlay").style.display="flex"}function dr(){x.fillStyle="#16213e";x.fillRect(0,0,c.width,c.height);for(let i=0;i<S;i++)for(let j=0;j<S;j++)if((i+j)%2===0){x.fillStyle="rgba(255,255,255,.02)";x.fillRect(i*B,j*B,B,B)}x.fillStyle="#0f3460";sk.forEach((s,i)=>{let g=i===0?"#00d2ff":"#0f3460";x.fillStyle=g;x.beginPath();x.roundRect(s.x*B+1,s.y*B+1,B-2,B-2,4);x.fill()});if(aiSnake){aiSnake.forEach((s,i)=>{x.fillStyle=i===0?"#ffd700":"#b8860b";x.beginPath();x.roundRect(s.x*B+1,s.y*B+1,B-2,B-2,4);x.fill()})}x.fillStyle="#e94560";x.beginPath();x.arc(fd.x*B+B/2,fd.y*B+B/2,B/2-2,0,Math.PI*2);x.fill();if(mode==="ai"){x.fillStyle="#00d2ff";x.font="12px sans-serif";x.textAlign="left";x.fillText("你: "+sc,10,20);x.fillStyle="#ffd700";x.fillText("AI: "+aiSc,10,36)}}document.addEventListener("keydown",e=>{let k=e.key.toLowerCase();if(k==="w"||k==="arrowup")setDir(0,-1);else if(k==="s"||k==="arrowdown")setDir(0,1);else if(k==="a"||k==="arrowleft")setDir(-1,0);else if(k==="d"||k==="arrowright")setDir(1,0);else if(k==="r")showMenu()});function testApi(){let url=document.getElementById("apiUrl").value.trim();let st=document.getElementById("apiStatus");if(!url){st.textContent="❌ 请输入 API 地址";st.style.color="#e94560";return}st.textContent="⏳ 测试中...";st.style.color="#00d2ff";fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"test",score:sc,mode:mode||"classic"})}).then(r=>{st.textContent="✅ 连接成功! 状态码: "+r.status;st.style.color="#4caf50";localStorage.setItem("snakeApi",url)}).catch(e=>{st.textContent="❌ 连接失败: "+e.message;st.style.color="#e94560"})}let savedApi=localStorage.getItem("snakeApi");if(savedApi)document.getElementById("apiUrl").value=savedApi;showMenu();</script></body></html>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>贪吃蛇大作战</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a1a;display:flex;flex-direction:column;align-items:center;min-height:100vh;font-family:sans-serif;color:#fff;outline:none}
+h1{font-size:28px;margin:20px 0 10px;background:linear-gradient(90deg,#00d2ff,#e94560);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#info{display:flex;gap:20px;font-size:14px;color:#aaa;margin-bottom:8px}
+#info b{color:#e94560}
+#wrap{position:relative;border:2px solid #e94560;border-radius:12px;overflow:hidden}
+canvas{display:block;background:#16213e}
+#menu{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+#menu h2{color:#e94560;font-size:22px;margin-bottom:8px}
+#menu button{width:200px;padding:10px;border:2px solid #333;border-radius:10px;background:transparent;color:#fff;font-size:14px;cursor:pointer}
+#menu button:hover{border-color:#e94560;background:rgba(233,69,96,.1)}
+#menu .d{font-size:11px;color:#666;margin-top:4px}
+#pad{display:grid;grid-template-areas:". u ." "l . r" ". d .";gap:6px;margin:12px 0}
+#pad button{width:56px;height:56px;font-size:22px;border:1px solid #333;border-radius:14px;background:#1a1a3e;color:#fff;cursor:pointer}
+#pad button:active{background:#e94560}
+.u{grid-area:u}.d{grid-area:d}.l{grid-area:l}.r{grid-area:r}
+#help{color:#555;font-size:12px;margin-bottom:20px}
+#dbg{position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:13px;padding:4px 8px;font-family:monospace}
+</style>
+</head>
+<body>
+<h1>🐍 贪吃蛇大作战</h1>
+<div id="info">
+<div>得分: <b id="sc">0</b></div>
+<div id="lvInfo" style="display:none">关卡: <b id="lv">1</b></div>
+<div id="tmInfo" style="display:none">⏱ <b id="tm">60</b>s</div>
+<div>最高: <b id="bs">0</b></div>
+</div>
+<div id="wrap">
+<canvas id="cv" width="400" height="400"></canvas>
+<div id="menu">
+<h2>选择模式</h2>
+<button onclick="go('classic')">🐍 经典模式<div class="d">撞墙或撞自己结束</div></button>
+<button onclick="go('level')">🏆 闯关模式<div class="d">每关加速，有障碍物</div></button>
+<button onclick="go('ai')">🤖 AI对战<div class="d">60秒和笨AI比分数</div></button>
+</div>
+</div>
+<div id="pad">
+<button class="u" onclick="sd(0,-1)">▲</button>
+<button class="l" onclick="sd(-1,0)">◀</button>
+<button class="r" onclick="sd(1,0)">▶</button>
+<button class="d" onclick="sd(0,1)">▼</button>
+</div>
+<div id="help">WASD / 方向键 / 点按钮控制 | R 返回菜单</div>
+<div id="dbg">调试: 页面加载完成</div>
+<script>
+var cv=document.getElementById("cv");
+var ctx=cv.getContext("2d");
+var BS=20,GS=20;
+var snake,food,dirX,dirY,score,timer,mode,level,tgt,walls,aiSnake,aiDir,aiScore,over,sec,secTimer,aiTimer;
+var best=parseInt(localStorage.getItem("snakeBest")||"0");
+document.getElementById("bs").textContent=best;
+var dbg=document.getElementById("dbg");
+
+function dd(m){dbg.textContent="调试: "+m;}
+
+dd("脚本开始执行");
+
+function sd(nx,ny){
+  dd("sd("+nx+","+ny+") 当前方向:"+dirX+","+dirY+" over:"+over);
+  if(over){dd("游戏结束，忽略");return;}
+  if(dirX==-nx&&dirY==-ny&&(dirX!=0||dirY!=0)){dd("反向，忽略");return;}
+  dirX=nx;dirY=ny;
+  dd("方向设置成功: "+dirX+","+dirY);
+}
+
+function go(m){
+  dd("开始游戏: "+m);
+  mode=m;level=1;score=0;over=false;
+  snake=[{x:5,y:10}];dirX=0;dirY=0;walls=[];
+  tgt=5;
+  document.getElementById("sc").textContent="0";
+  document.getElementById("lvInfo").style.display=m=="level"?"block":"none";
+  document.getElementById("tmInfo").style.display=m=="ai"?"block":"none";
+  document.getElementById("menu").style.display="none";
+  if(m=="ai"){
+    sec=60;document.getElementById("tm").textContent="60";
+    aiSnake=[{x:15,y:10}];aiDir={x:0,y:0};aiScore=0;
+    if(secTimer)clearInterval(secTimer);
+    secTimer=setInterval(function(){
+      sec--;document.getElementById("tm").textContent=sec;
+      if(sec<=0){clearInterval(secTimer);clearInterval(timer);clearInterval(aiTimer);endGame();}
+    },1000);
+  }else{aiSnake=null;if(secTimer)clearInterval(secTimer);}
+  if(m=="level")makeWalls();
+  newFood();
+  if(timer)clearInterval(timer);
+  if(aiTimer)clearInterval(aiTimer);
+  var sp=m=="level"?Math.max(55,125-level*8):110;
+  timer=setInterval(step,sp);
+  if(m=="ai")aiTimer=setInterval(aiStep,220);
+  draw();
+  dd("游戏已启动，等待按键...");
+}
+
+function makeWalls(){
+  walls=[];var n=Math.min(level*2,14);
+  for(var i=0;i<n;i++){
+    var wx,wy,ok=false;
+    for(var t=0;t<50;t++){
+      wx=Math.floor(Math.random()*GS);wy=Math.floor(Math.random()*GS);
+      if(wx>=3&&wx<=7&&wy>=8&&wy<=12)continue;
+      if(wx>=13&&wx<=17&&wy>=8&&wy<=12)continue;
+      var dup=false;
+      for(var j=0;j<walls.length;j++){if(walls[j].x==wx&&walls[j].y==wy){dup=true;break;}}
+      if(!dup){ok=true;break;}
+    }
+    if(ok)walls.push({x:wx,y:wy});
+  }
+}
+
+function newFood(){
+  for(var t=0;t<100;t++){
+    food={x:Math.floor(Math.random()*GS),y:Math.floor(Math.random()*GS)};
+    var bad=false;
+    for(var i=0;i<snake.length;i++){if(snake[i].x==food.x&&snake[i].y==food.y){bad=true;break;}}
+    if(bad)continue;
+    if(aiSnake){for(var i=0;i<aiSnake.length;i++){if(aiSnake[i].x==food.x&&aiSnake[i].y==food.y){bad=true;break;}}}
+    if(bad)continue;
+    for(var i=0;i<walls.length;i++){if(walls[i].x==food.x&&walls[i].y==food.y){bad=true;break;}}
+    if(bad)continue;
+    return;
+  }
+  food={x:0,y:0};
+}
+
+function step(){
+  if(over)return;
+  if(dirX==0&&dirY==0)return;
+  var h={x:snake[0].x+dirX,y:snake[0].y+dirY};
+  if(h.x<0||h.x>=GS||h.y<0||h.y>=GS){endGame();return;}
+  for(var i=0;i<snake.length;i++){if(snake[i].x==h.x&&snake[i].y==h.y){endGame();return;}}
+  for(var i=0;i<walls.length;i++){if(walls[i].x==h.x&&walls[i].y==h.y){endGame();return;}}
+  snake.unshift(h);
+  if(h.x==food.x&&h.y==food.y){
+    score++;document.getElementById("sc").textContent=score;newFood();
+    if(mode=="level"&&score>=tgt*level){
+      level++;document.getElementById("lv").textContent=level;tgt=5+level*2;
+      makeWalls();clearInterval(timer);timer=setInterval(step,Math.max(55,125-level*8));
+    }
+  }else{snake.pop();}
+  draw();
+}
+
+function aiStep(){
+  if(!aiSnake||over)return;
+  if(Math.random()<0.45)return;
+  var h=aiSnake[0];
+  var dirs=[[0,-1],[0,1],[-1,0],[1,0]];
+  dirs.sort(function(){return Math.random()-0.5;});
+  var nx=0,ny=0,found=false;
+  for(var i=0;i<dirs.length;i++){
+    var dx=dirs[i][0],dy=dirs[i][1];
+    if(aiDir.x==-dx&&aiDir.y==-dy)continue;
+    var tx=h.x+dx,ty=h.y+dy;
+    if(tx<0||tx>=GS||ty<0||ty>=GS)continue;
+    var bad=false;
+    for(var j=0;j<aiSnake.length;j++){if(aiSnake[j].x==tx&&aiSnake[j].y==ty){bad=true;break;}}
+    if(bad)continue;
+    for(var j=0;j<snake.length;j++){if(snake[j].x==tx&&snake[j].y==ty){bad=true;break;}}
+    if(bad)continue;
+    for(var j=0;j<walls.length;j++){if(walls[j].x==tx&&walls[j].y==ty){bad=true;break;}}
+    if(bad)continue;
+    nx=dx;ny=dy;found=true;break;
+  }
+  if(!found)return;
+  aiDir={x:nx,y:ny};
+  var nh={x:h.x+nx,y:h.y+ny};
+  aiSnake.unshift(nh);
+  if(nh.x==food.x&&nh.y==food.y){aiScore++;newFood();}
+  else{aiSnake.pop();}
+}
+
+function endGame(){
+  over=true;clearInterval(timer);
+  if(secTimer)clearInterval(secTimer);
+  if(aiTimer)clearInterval(aiTimer);
+  if(score>best){best=score;localStorage.setItem("snakeBest",best);document.getElementById("bs").textContent=best;}
+  var msg="游戏结束!";
+  if(mode=="ai")msg=score>aiScore?"🎉 你赢了! "+score+" vs "+aiScore:score==aiScore?"🤝 平局! "+score+" vs "+aiScore:"🤖 AI赢了! "+aiScore+" vs "+score;
+  ctx.fillStyle="rgba(0,0,0,.85)";ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle="#e94560";ctx.font="26px sans-serif";ctx.textAlign="center";
+  ctx.fillText(msg,cv.width/2,cv.height/2-20);
+  ctx.fillStyle="#fff";ctx.font="18px sans-serif";
+  ctx.fillText("得分: "+score,cv.width/2,cv.height/2+15);
+  ctx.fillStyle="#aaa";ctx.font="14px sans-serif";
+  ctx.fillText("点击画布返回菜单",cv.width/2,cv.height/2+50);
+  cv.onclick=function(){cv.onclick=null;showMenu();};
+}
+
+function showMenu(){
+  clearInterval(timer);if(secTimer)clearInterval(secTimer);if(aiTimer)clearInterval(aiTimer);
+  document.getElementById("menu").style.display="flex";
+  ctx.fillStyle="#16213e";ctx.fillRect(0,0,cv.width,cv.height);
+}
+
+函数 draw(){
+  ctx.fillStyle="#16213e";ctx.fillRect(0,0,cv.width,cv.height);
+对于(变量 i=0;i<GS;i++(变量 j=0;j<GS;j++)如果((i+j)%2==0){上下文.fillStyle="rgba(255,255,255,.02)";上下文.fillRect(i*BS,j*BS,BS,BS);}
+  ( i=0;i<walls.长度;i++){上下文.填充样式="#444";上下文.填充矩形(walls[i].x*BS,walls[i].y*BS,BS,BS);}
+对于i=0;i<蛇.长度;i++{上下文.填充样式=i==0?“#00d2ff”:“#0f3460”;上下文.fillRect(蛇[i].x*BS+1,蛇[
+  (aiSnake){for(var i=0;i<aiSnake.length;i++){ctx.fillStyle=i==0?"#ffd700":"#b8860b";ctx.fillRect(aiSnake[i].x*BS+1,aiSnake[i].y*BS+1,BS-2,BS-2);}}
+  ctx.fillStyle="#e94560";ctx.beginPath();ctx.arc(food.x*BS+BS/2,food.y*BS+BS/2,BS/2-2,0,Math.PI*2);ctx.fill();
+  如果(模式=="ai"){上下文.填充颜色="#00d2ff";上下文.字体="13px 无衬线体";上下文.文本对齐="左对齐";上下文.绘制文本("你:"+分数,10,20);上下文.填充颜色="#ffd700";上下文.绘制文本("AI:"+人工智能分数,10,38);}
+}
+
+文档.onkeydown=函数(e){
+  var k=e.key||"";
+  var kc=e.keyCode||0;
+  dd("按键: ["+k+"] code="+kc);
+  k=k.toLowerCase();
+  如果(k=="w"||k=="arrowup"||kc==38){e.preventDefault();sd(0,-1);}
+  否则 如果(k=="s"||k=="向下箭头"||kc==40){e.preventDefault();sd(0,1);}
+  否则 如果(k=="a"||k=="arrowleft"||kc==37){e.preventDefault();sd(-1,0);}
+  否则 如果(k=="d"||k=="arrowright"||kc==39){e.preventDefault();sd(1,0);}
+  else if(k=="r"){showMenu();}
+};
+
+dd("所有代码执行完毕，等待操作");
+showMenu();
+</script>
+</body>
+</html>
